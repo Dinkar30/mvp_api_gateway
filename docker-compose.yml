@@ -1,0 +1,23 @@
+services:
+ redis:
+  image: redis:7-alpine
+  ports:
+      - "6379:6379"
+  
+ gateway:
+  build: .
+  volumes:
+      - ./data:/code/db_data  # Map local 'data' folder to '/code/db_data' inside
+  ports:
+     - "8000:8000"
+  depends_on:
+     - redis
+  environment:
+      - REDIS_HOST=redis
+      - DATABASE_URL=sqlite:////code/db_data/test.db
+  
+ backend-service:
+  container_name: backend-service
+  build: 
+    context: .       
+    dockerfile: Dockerfile.backend
