@@ -24,6 +24,7 @@ class User(Base):
     api: Mapped[list["APIKey"]] = relationship(back_populates="user")
     request_logs: Mapped[list["RequestLog"]] = relationship(back_populates="user")
     rate_limit: Mapped[int] = mapped_column(default=10)
+    hashed_password: Mapped[str] = mapped_column()
 
 class APIKey(Base):
     __tablename__ = "api_keys"
@@ -40,4 +41,6 @@ class Service(Base):
     id: Mapped[int] = mapped_column(primary_key=True,index=True)
     name: Mapped[str] = mapped_column(unique=True)
     prefix: Mapped[str] = mapped_column()
-    target_url : Mapped[str] = mapped_column()
+    target_url: Mapped[str] = mapped_column()
+    is_healthy: Mapped[bool] = mapped_column(default=True)
+    last_checked: Mapped[datetime] = mapped_column(nullable=True)

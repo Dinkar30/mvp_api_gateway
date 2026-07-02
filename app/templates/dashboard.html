@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <h1 class="text-3xl font-bold mb-6">API Gateway Dashboard</h1>
+    <div class="grid grid-cols-1 gap-4">
+        {% for s in services %}
+        <div class="bg-white p-6 rounded shadow">
+            <h2 class="text-xl font-semibold">{{ s.name }}</h2>
+            <p class="text-gray-600">Prefix: /{{ s.prefix }}</p>
+            <p class="text-blue-500">{{ s.target_url }}</p>
+            <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium">Status:</span>
+            {% if s.is_healthy %}
+            <span class="px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full">Healthy</span>
+            {% else %}
+            <span class="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">Unhealthy</span>
+            {% endif %}
+            <span class="text-xs text-gray-400">Last checked: {{ s.last_checked }}</span>
+    </div>
+        </div>
+        
+        {% endfor %}
+    </div>
+</body>
+</html>

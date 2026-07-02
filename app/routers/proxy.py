@@ -15,6 +15,8 @@ async def proxy( service_prefix: str , path: str , db: Session = Depends(get_db)
     try:
         async with AsyncClient() as client:
             response = await client.get(f"{service.target_url}/{path}" , timeout=5.0)
+        if not service.is_healthy:
+            raise HTTPException(status_code=503,detail="service is currently unavailable")
         return Response(
             content = response.content,
             status_code=response.status_code,
