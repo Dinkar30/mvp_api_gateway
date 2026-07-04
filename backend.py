@@ -13,3 +13,7 @@ async def health():
 @app.get("/data")
 async def get_data():
     return {"id": "1", "service": "Backend "}
+
+@app.post("/test-post")
+async def test_post(data: dict):
+    return {"received":data}

@@ -25,7 +25,7 @@ def seed():
         api_key_record = APIKey(user_id=user.id , hashed_key=hashed_key)
         db.add(api_key_record)        
 
-        service = Service(name="goDaddy",prefix="goDaddy",target_url="http://backend-service:8001",is_healthy=True, last_checked=datetime.now(UTC))
+        service = Service(name="backend",prefix="backend",target_url="http://backend-service:8001",is_healthy=True, last_checked=datetime.now(UTC))
         db.add(service)
 
         db.commit()

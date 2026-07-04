@@ -16,7 +16,7 @@ def verify_api_key(plain_key: str, hashed_key: str):
     return bcrypt.checkpw(sha_hashed_key, hashed_key.encode('utf-8'))
 
 SECRET_KEY = os.getenv("SECRET_KEY", "IseeDeadPeople")
-ALGORITHM = "HS256"
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 def create_access_token(data: dict):
     to_be_encoded = data.copy()

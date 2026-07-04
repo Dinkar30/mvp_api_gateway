@@ -1,4 +1,4 @@
-from app.database import Base
+from .database import Base
 from sqlalchemy.sql import func 
 from sqlalchemy import ForeignKey , Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -23,8 +23,10 @@ class User(Base):
     username: Mapped[str] = mapped_column( unique=True)
     api: Mapped[list["APIKey"]] = relationship(back_populates="user")
     request_logs: Mapped[list["RequestLog"]] = relationship(back_populates="user")
+    services: Mapped[list["Service"]] = relationship(back_populates="owner")
     rate_limit: Mapped[int] = mapped_column(default=10)
     hashed_password: Mapped[str] = mapped_column()
+    role: Mapped[str] = mapped_column(default="developer")
 
 class APIKey(Base):
     __tablename__ = "api_keys"
@@ -44,3 +46,5 @@ class Service(Base):
     target_url: Mapped[str] = mapped_column()
     is_healthy: Mapped[bool] = mapped_column(default=True)
     last_checked: Mapped[datetime] = mapped_column(nullable=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    owner: Mapped["User"] = relationship(back_populates="services")

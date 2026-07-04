@@ -2,10 +2,10 @@ from fastapi import FastAPI,Request , Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from .routers import auth
-from .models import RequestLog, Service
+from .models import RequestLog, Service, User
 from .database import engine, Base,sessionLocal , get_db
 from .routers import analytics, proxy, admin
-from .dependencies import get_current_user
+from .dependencies import get_session_user, get_current_user
 from sqlalchemy.orm import Session 
 from contextlib import asynccontextmanager
 from .utils import monitor_services
@@ -44,9 +44,14 @@ async def root():
 
 templates = Jinja2Templates(directory="app/templates")
 
-@app.get('/dashboard')
-def dashboard(request: Request , db: Session = Depends(get_db)):
-    services = db.query(Service).all()
+@app.get('/dashboard' , dependencies=[Depends(get_session_user)])
+def dashboard(request: Request , db: Session = Depends(get_db) , current_user: User = Depends(get_current_user)):
+    services = None
+    if current_user.role == "admin":
+        services = db.query(Service).all()
+    else:
+        services = db.query(Service).filter(Service.owner_id == current_user.id).all()
+
     return templates.TemplateResponse(
         request,
         "dashboard.html",

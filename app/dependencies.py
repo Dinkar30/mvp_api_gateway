@@ -5,6 +5,8 @@ from .models import APIKey,User
 from .security import verify_api_key
 from .redis_client import redis_client
 import hashlib
+from .security import ALGORITHM, SECRET_KEY 
+import jwt
 async def get_current_user( request: Request, db: Session = Depends(get_db) , x_api_key:str = Header(None)):
     if not x_api_key:
         raise HTTPException(
@@ -40,6 +42,21 @@ async def get_current_user( request: Request, db: Session = Depends(get_db) , x_
             detail="Too many requests , try later"
         )
     return user
-
+ 
+async def get_session_user( request : Request , db : Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401,detail="Not authenticated")
+    try:
+        payload = jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        username : str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401,detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401,detail="could not validate credentials")
     
+    user = db.query(User).filter(User.username==username).first()
+    if user is None:
+        raise HTTPException(status_code=401,detail="User not found")
+    return user
 
