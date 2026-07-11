@@ -11,6 +11,7 @@ def seed():
     db = sessionLocal()
     try:
         user = User(username= f"user_{int(time.time())}")
+        user.role = "admin"
         user.rate_limit = 15
         alphabets = string.ascii_letters + string.digits
         password = "".join(secrets.choice(alphabets) for _ in range(16))
@@ -24,15 +25,16 @@ def seed():
         hashed_key = get_hashed_key(plain_key)
         api_key_record = APIKey(user_id=user.id , hashed_key=hashed_key)
         db.add(api_key_record)        
+        print(f"User created:  {user.id},{user.username}")
+        print(f"Password for user: {password}")
+        print(f"API key generated: {plain_key}")
 
-        service = Service(name="backend",prefix="backend",target_url="http://backend-service:8001",is_healthy=True, last_checked=datetime.now(UTC))
+        service = Service(name="testing",prefix="forAll1",target_url="http://backend-service:8001",is_healthy=True, last_checked=datetime.now(UTC), owner_id = user.id)
         db.add(service)
 
         db.commit()
 
-        print(f"User created:  {user.id},{user.username}")
-        print(f"Password for user: {password}")
-        print(f"API key generated: {plain_key}")
+
         print(f"service has been generated: {service}")
         print("keep key safe , won't be shown again")
     except Exception as e:

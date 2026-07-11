@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Log in &middot; API Gateway</title>
+<title>Sign up &middot; API Gateway</title>
 
 <!-- Set theme before paint to avoid a flash of the wrong theme -->
 <script>
@@ -103,27 +103,17 @@
     .brand-mid h1 { font-size: 32px; line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
     .brand-mid p { font-size: 14px; color: #A7ACA4; margin: 14px 0 0; line-height: 1.6; }
 
-    /* mini gateway-flow visual, reusing the dashboard's signature motif */
-    .flow-demo { position: relative; margin-top: 40px; display: flex; flex-direction: column; gap: 4px; max-width: 340px; }
-    .flow-demo .row { display: grid; grid-template-columns: 60px 1fr auto; align-items: center; padding: 10px 0; }
-    .flow-demo .row + .row { border-top: 1px dashed rgba(255,255,255,0.09); }
-    .flow-demo .client { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8B928C; display: flex; align-items: center; gap: 7px; }
-    .flow-demo .client .sq { width: 7px; height: 7px; border-radius: 2px; border: 1.5px solid #8B928C; }
-    .flow-demo .track { position: relative; height: 2px; background: rgba(255,255,255,0.09); margin: 0 14px; border-radius: 2px; }
-    .flow-demo .track .dot {
-        position: absolute; top: 50%; left: 0; width: 5px; height: 5px; border-radius: 50%;
-        background: #37D0A6; transform: translate(-50%, -50%);
-        box-shadow: 0 0 8px rgba(55,208,166,0.8);
-        animation: demo-flow 2.4s linear infinite;
+    /* small feature list, swapped in for the flow-demo used on login */
+    .feature-list { position: relative; margin-top: 36px; display: flex; flex-direction: column; gap: 16px; max-width: 340px; }
+    .feature-item { display: flex; align-items: flex-start; gap: 12px; }
+    .feature-item .mark {
+        width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; margin-top: 1px;
+        background: rgba(55,208,166,0.14); color: #37D0A6;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-family: 'IBM Plex Mono', monospace;
     }
-    @keyframes demo-flow {
-        0% { left: 0%; opacity: 0; }
-        8% { opacity: 1; }
-        92% { opacity: 1; }
-        100% { left: 100%; opacity: 0; }
-    }
-    .flow-demo .svc { display: flex; align-items: center; gap: 8px; justify-self: end; font-size: 12px; color: #C7CAC3; white-space: nowrap; }
-    .flow-demo .svc .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #37D0A6; flex-shrink: 0; }
+    .feature-item .text h3 { font-size: 13.5px; font-weight: 600; color: #E9EBE6; margin: 0; }
+    .feature-item .text p { font-size: 12.5px; color: #8B928C; margin: 3px 0 0; line-height: 1.5; }
 
     .brand-bottom { position: relative; display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6B716A; }
     .brand-bottom .ping { position: relative; width: 6px; height: 6px; }
@@ -159,9 +149,11 @@
 
     form { display: flex; flex-direction: column; gap: 18px; }
     .field label {
-        display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 12px; font-weight: 600; color: var(--muted);
         margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.04em;
     }
+    .field label .hint { text-transform: none; font-weight: 400; font-size: 11.5px; letter-spacing: 0; color: var(--muted); opacity: 0.8; }
     .field input {
         width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 13.5px;
         border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px;
@@ -170,6 +162,13 @@
     }
     .field input:focus { outline: none; border-color: var(--teal); background: var(--paper); }
     .field input::placeholder { color: var(--muted); opacity: 0.7; }
+    .field input.match-ok { border-color: var(--teal); }
+    .field input.match-bad { border-color: var(--red); }
+
+    .field-note { font-size: 11.5px; margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+    .field-note.ok { color: var(--teal); }
+    .field-note.bad { color: var(--red); }
+    .field-note .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
     .submit-btn {
         width: 100%; border: none; border-radius: 8px; padding: 12px 16px;
@@ -196,7 +195,6 @@
         margin: 0;
     }
     #error.hidden { display: none; }
-    #error .mark { flex-shrink: 0; }
 
     .card-link { font-size: 13px; color: var(--muted); text-align: center; margin: 4px 0 0; }
     .card-link a { color: var(--teal); font-weight: 600; text-decoration: none; }
@@ -225,24 +223,30 @@
         </div>
 
         <div class="brand-mid">
-            <h1>One gate in, every service behind it.</h1>
-            <p>Route, authenticate, and monitor traffic across your backend services from a single console.</p>
+            <h1>Set up your console access.</h1>
+            <p>Create an account to register services, issue API keys, and watch traffic move through your gateway.</p>
 
-            <div class="flow-demo">
-                <div class="row">
-                    <div class="client"><span class="sq"></span>Client</div>
-                    <div class="track"><div class="dot" style="animation-delay: 0s;"></div></div>
-                    <div class="svc"><span class="status-dot"></span>Users</div>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="mark">&rarr;</div>
+                    <div class="text">
+                        <h3>Route backend services</h3>
+                        <p>Register a service once and the gateway handles the rest.</p>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="client"><span class="sq"></span>Client</div>
-                    <div class="track"><div class="dot" style="animation-delay: -0.8s;"></div></div>
-                    <div class="svc"><span class="status-dot"></span>Billing</div>
+                <div class="feature-item">
+                    <div class="mark">&#9679;</div>
+                    <div class="text">
+                        <h3>Watch traffic live</h3>
+                        <p>See every request, status code, and latency as it happens.</p>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="client"><span class="sq"></span>Client</div>
-                    <div class="track"><div class="dot" style="animation-delay: -1.6s;"></div></div>
-                    <div class="svc"><span class="status-dot"></span>Notifications</div>
+                <div class="feature-item">
+                    <div class="mark">&#8942;</div>
+                    <div class="text">
+                        <h3>Issue scoped API keys</h3>
+                        <p>Generate keys to authenticate requests through the gateway.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -260,33 +264,37 @@
 
         <div class="card">
             <div class="card-head">
-                <span class="eyebrow">Restricted access</span>
-                <h1>Log in to your console</h1>
-                <p>Enter your credentials to manage services and view live traffic.</p>
+                <span class="eyebrow">Create account</span>
+                <h1>Set up console access</h1>
+                <p>Register an administrator account for this gateway.</p>
             </div>
 
-            <form id="loginForm">
+            <form id="signupForm">
                 <div class="field">
                     <label for="username">Username</label>
-                    <input id="username" name="username" type="text" required placeholder="Enter username" autocomplete="username">
+                    <input id="username" name="username" type="text" required placeholder="Choose a username" autocomplete="username">
                 </div>
 
                 <div class="field">
-                    <label for="password">Password</label>
-                    <input id="password" name="password" type="password" required placeholder="Enter password" autocomplete="current-password">
+                    <label for="password">Password <span class="hint">min. 6 characters</span></label>
+                    <input id="password" name="password" type="password" required placeholder="Create a password" autocomplete="new-password">
+                </div>
+
+                <div class="field">
+                    <label for="confirmPassword">Confirm password</label>
+                    <input id="confirmPassword" name="confirmPassword" type="password" required placeholder="Re-enter password" autocomplete="new-password">
+                    <p id="matchNote" class="field-note hidden"><span class="dot"></span><span id="matchText"></span></p>
                 </div>
 
                 <button type="submit" class="submit-btn" id="submitBtn">
                     <span class="spinner"></span>
-                    <span class="btn-label">Log in</span>
+                    <span class="btn-label">Create account</span>
                 </button>
 
                 <p id="error" class="hidden"></p>
 
-                <p class="card-link">Don't have an account? <a href="/auth/signup">Sign up</a></p>
+                <p class="card-link">Already have an account? <a href="/auth/login">Log in</a></p>
             </form>
-
-            <p class="card-foot">Access is limited to authorized gateway administrators.</p>
         </div>
     </main>
 
@@ -300,21 +308,57 @@ function toggleTheme() {
     localStorage.setItem('gateway-theme', next);
 }
 
-const form = document.getElementById("loginForm");
+const form = document.getElementById("signupForm");
 const error = document.getElementById("error");
 const submitBtn = document.getElementById("submitBtn");
+const passwordInput = document.getElementById("password");
+const confirmInput = document.getElementById("confirmPassword");
+const matchNote = document.getElementById("matchNote");
+const matchText = document.getElementById("matchText");
+
+function checkMatch() {
+    if (!confirmInput.value) {
+        matchNote.classList.add("hidden");
+        confirmInput.classList.remove("match-ok", "match-bad");
+        return;
+    }
+    const matches = passwordInput.value === confirmInput.value;
+    matchNote.classList.remove("hidden");
+    matchNote.classList.toggle("ok", matches);
+    matchNote.classList.toggle("bad", !matches);
+    confirmInput.classList.toggle("match-ok", matches);
+    confirmInput.classList.toggle("match-bad", !matches);
+    matchText.textContent = matches ? "Passwords match" : "Passwords don't match yet";
+}
+
+passwordInput.addEventListener("input", checkMatch);
+confirmInput.addEventListener("input", checkMatch);
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     error.classList.add("hidden");
+
+    const username = document.getElementById("username").value;
+    const password = passwordInput.value;
+    const confirmPassword = confirmInput.value;
+
+    if (password !== confirmPassword) {
+        error.textContent = "Passwords do not match";
+        error.classList.remove("hidden");
+        return;
+    }
+
+    if (password.length < 6) {
+        error.textContent = "Password must be at least 6 characters";
+        error.classList.remove("hidden");
+        return;
+    }
+
     submitBtn.classList.add("loading");
     submitBtn.disabled = true;
 
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
-
     try {
-        const response = await fetch("/auth/login", {
+        const response = await fetch("/auth/signup", {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -324,13 +368,13 @@ form.addEventListener("submit", async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            window.location.href = "/dashboard";
+            window.location.href = "/auth/login?registered=true";
         } else {
-            error.textContent = data.detail || "Login failed";
+            error.textContent = data.detail || "Sign up failed";
             error.classList.remove("hidden");
         }
     } catch (err) {
-        error.textContent = "Login failed";
+        error.textContent = "Sign up failed";
         error.classList.remove("hidden");
     } finally {
         submitBtn.classList.remove("loading");

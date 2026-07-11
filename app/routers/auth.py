@@ -1,7 +1,7 @@
 from fastapi import APIRouter , Depends, HTTPException , Request
 from sqlalchemy.orm import Session
 from fastapi.templating import Jinja2Templates
-from ..security import create_access_token, verify_api_key
+from ..security import create_access_token, verify_api_key, get_hashed_key
 from ..database import get_db
 from ..schemas import UserLogin
 from ..models import User
@@ -37,6 +37,49 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/login", response_class = HTMLResponse)
-def login(request: Request):
-   return templates.TemplateResponse(request,"login.html")
+def get_login(request: Request):
+   response = templates.TemplateResponse(request,"login.html")
+   response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+   response.headers["Pragma"] = "no-cache"
+   response.headers["Expires"] = "0"
+   return response
    
+@router.post("/logout")
+def logout():
+    response = JSONResponse({"message": "Logout successful"})
+    response.delete_cookie(key="access_token", path="/", httponly=True, samesite="lax")
+    return response
+
+@router.get("/signup", response_class=HTMLResponse)
+def get_signup(request: Request):
+    response = templates.TemplateResponse(request, "signup.html")
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+@router.post("/signup")
+def signup(data: UserLogin, db: Session = Depends(get_db)):
+    try:
+        existing_user = db.query(User).filter(User.username == data.username).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        hashed_password = get_hashed_key(data.password)
+        new_user = User(
+            username=data.username,
+            hashed_password=hashed_password
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        return JSONResponse({
+            "message": "Sign up successful",
+            "user_id": new_user.id
+        })
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

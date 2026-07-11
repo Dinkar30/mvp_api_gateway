@@ -41,10 +41,11 @@ class Service(Base):
     __tablename__ = "services"
     
     id: Mapped[int] = mapped_column(primary_key=True,index=True)
-    name: Mapped[str] = mapped_column(unique=True)
-    prefix: Mapped[str] = mapped_column()
+    name: Mapped[str] = mapped_column()
+    prefix: Mapped[str] = mapped_column(unique=True)
     target_url: Mapped[str] = mapped_column()
     is_healthy: Mapped[bool] = mapped_column(default=True)
     last_checked: Mapped[datetime] = mapped_column(nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     owner: Mapped["User"] = relationship(back_populates="services")
+    healthcheck_path: Mapped[str] = mapped_column(default="/")

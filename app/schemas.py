@@ -4,6 +4,7 @@ class ServiceCreate(BaseModel):
     name:str
     prefix: str
     target_url: str
+    healthcheck_path: str = "/"
 
     class Config:
         from_attributes=True

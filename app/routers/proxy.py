@@ -1,9 +1,17 @@
-from httpx import AsyncClient, ConnectError
+from httpx import AsyncClient, ConnectError, TimeoutException, request
 from fastapi import APIRouter,Depends, HTTPException ,Response, Request
+from websockets import client, headers
 from ..models import User , Service
 from ..dependencies import get_current_user
 from ..database import get_db
 from sqlalchemy.orm import Session
+import asyncio
+
+MAX_RETRIES = 3
+RETRY_BACKOFF_FACTOR = 0.5  
+SAFE_METHODS = {"GET"} 
+RETRYABLE_ERRORS = (ConnectError, TimeoutException)
+
 router = APIRouter()
 
 
@@ -15,29 +23,39 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
     try:
         async with AsyncClient() as client:
             url = f"{service.target_url}/{path}"
-            response = await client.request(
-                method=request.method,
-                url=url,
-                content=await request.body(),
-                headers=dict(request.headers),
-                params=request.query_params,
-                timeout=10.0
+            headers = dict(request.headers)
+            headers.pop("x-api-key", None)
+            headers.pop("host", None)
+
+
+            for attempt in range(MAX_RETRIES):
+                try:
+                    response = await client.request(
+                        method=request.method,
+                        url=url,
+                        content=await request.body(),
+                        headers=headers,
+                        params=request.query_params,
+                        timeout=10.0
+                    )
+                    break
+                except RETRYABLE_ERRORS as e:
+                    if request.method in SAFE_METHODS and attempt < MAX_RETRIES - 1:
+                        backoff_time = RETRY_BACKOFF_FACTOR * (attempt + 1)
+                        await asyncio.sleep(backoff_time)
+                        continue
+                    else:
+                        raise
+            
+            if not service.is_healthy:
+                raise HTTPException(status_code=503,detail="service is currently unavailable")
+            return Response(
+                content = response.content,
+                status_code=response.status_code,
+                headers=dict(response.headers)
             )
-        if not service.is_healthy:
-            raise HTTPException(status_code=503,detail="service is currently unavailable")
-        return Response(
-            content = response.content,
-            status_code=response.status_code,
-            headers=dict(response.headers)
-        )
     except ConnectError:
         raise HTTPException(status_code=502,detail=f"could not connect to backend service at {service.target_url}")
     except Exception as e:
         raise HTTPException(status_code=500,detail=f"proxy error: {str(e)}")
     
-@router.get("/backend/health")
-async def backend_health():
-    async with AsyncClient() as client:
-        response = await client.get("http://localhost:8001/health")
-    return response.json()
-

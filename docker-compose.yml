@@ -1,23 +1,47 @@
 services:
- redis:
-  image: redis:7-alpine
-  ports:
+  redis:
+    image: redis:7-alpine
+    ports:
       - "6379:6379"
-  
- gateway:
-  build: .
-  volumes:
-      - ./data:/code/db_data  # Map local 'data' folder to '/code/db_data' inside
-  ports:
-     - "8000:8000"
-  depends_on:
-     - redis
-  environment:
+
+  db:
+    image: postgres:15-alpine
+    container_name: gateway_db
+    restart: always
+    environment:
+      POSTGRES_USER: gateway_user
+      POSTGRES_PASSWORD: gateway_password
+      POSTGRES_DB: gateway_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gateway_user -d gateway_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  gateway:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
       - REDIS_HOST=redis
-      - DATABASE_URL=sqlite:////code/db_data/test.db
-  
- backend-service:
-  container_name: backend-service
-  build: 
-    context: .       
-    dockerfile: Dockerfile.backend
+      - DATABASE_URL=postgresql://gateway_user:gateway_password@db:5432/gateway_db
+    restart: on-failure
+
+  backend-service:
+    container_name: backend-service
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+
+volumes:
+  postgres_data:

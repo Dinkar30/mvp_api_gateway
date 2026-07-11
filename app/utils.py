@@ -9,7 +9,7 @@ async def monitor_services(db: Session):
     async with httpx.AsyncClient() as client:
         for service in services:
             try:
-                response = await client.get(f"{service.target_url}/health",timeout=2.0)
+                response = await client.get(f"{service.target_url}{service.healthcheck_path}",timeout=2.0)
                 service.is_healthy = response.status_code == 200
             except Exception:
                 service.is_healthy = False

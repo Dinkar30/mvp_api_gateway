@@ -58,5 +58,6 @@ async def get_session_user( request : Request , db : Session = Depends(get_db)):
     user = db.query(User).filter(User.username==username).first()
     if user is None:
         raise HTTPException(status_code=401,detail="User not found")
+    request.state.user = user
     return user
 
