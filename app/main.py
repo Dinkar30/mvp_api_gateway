@@ -49,6 +49,40 @@ async def root():
 
 templates = Jinja2Templates(directory="app/templates")
 
+# Jinja2 filter for timezone conversion to IST
+def to_ist_time(dt):
+    """Convert UTC datetime to IST (UTC+5:30) in HH:MM:SS format"""
+    if dt is None:
+        return "N/A"
+    try:
+        from datetime import timedelta, timezone
+        ist = timezone(timedelta(hours=5, minutes=30))
+        # If dt is naive, assume it's UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        ist_time = dt.astimezone(ist)
+        return ist_time.strftime('%H:%M:%S')
+    except:
+        return str(dt)
+
+def to_ist_simple(dt):
+    """Convert UTC datetime to IST in simple readable format (e.g., 'Feb 12, 3:45 PM')"""
+    if dt is None:
+        return "N/A"
+    try:
+        from datetime import timedelta, timezone
+        ist = timezone(timedelta(hours=5, minutes=30))
+        # If dt is naive, assume it's UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        ist_time = dt.astimezone(ist)
+        return ist_time.strftime('%b %d, %I:%M %p')
+    except:
+        return str(dt)
+
+templates.env.filters['to_ist_time'] = to_ist_time
+templates.env.filters['to_ist_simple'] = to_ist_simple
+
 @app.get('/dashboard')
 def dashboard(request: Request , db: Session = Depends(get_db) , current_user: User = Depends(get_session_user)):
     services = None

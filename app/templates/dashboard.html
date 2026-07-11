@@ -539,7 +539,7 @@ checkAuth();
                             </div>
 
                             <div class="service-footer">
-                                <span>Last checked {{ s.last_checked }}</span>
+                                <span>Last checked {{ s.last_checked | to_ist_simple }}</span>
                                 <button onclick="deleteService({{ s.id }})">Delete</button>
                             </div>
                         </div>
@@ -568,7 +568,7 @@ checkAuth();
                                 <th>Path</th>
                                 <th>Status</th>
                                 <th>Latency</th>
-                                <th>Timestamp</th>
+                                <th>Timestamp (IST)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -601,7 +601,7 @@ checkAuth();
                                 </td>
 
                                 <td class="latency">{{ log.latency | round(4) }}s</td>
-                                <td class="timestamp">{{ log.timestamp.strftime('%H:%M:%S') }}</td>
+                                <td class="timestamp">{{ log.timestamp | to_ist_time }}</td>
                             </tr>
                             {% else %}
                             <tr>
