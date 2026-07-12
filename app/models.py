@@ -15,6 +15,8 @@ class RequestLog(Base):
     timestamp: Mapped[datetime] = mapped_column(server_default=func.now())
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
     user: Mapped["User"] = relationship(back_populates="request_logs")
+    request_body: Mapped[str] = mapped_column(nullable=True)
+    response_body: Mapped[str] = mapped_column(nullable=True)
 
 class User(Base):
     __tablename__ = "users"

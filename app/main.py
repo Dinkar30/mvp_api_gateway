@@ -1,5 +1,5 @@
-from fastapi import FastAPI,Request , Depends 
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI,Request , Depends , Response
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from .routers import auth
@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 from .utils import monitor_services
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import iterate_in_threadpool
 import time
 import asyncio
 
@@ -43,9 +44,9 @@ app.include_router(admin.router,prefix="/admin",dependencies=[Depends(get_sessio
 app.include_router(analytics.router ,prefix="/analytics", dependencies=[Depends(get_session_user)])
 
 
-@app.get("/")
-async def root():
-    return {"message": "the gateway is working"}   
+@app.get("/", response_class=HTMLResponse)
+def landing_page(request: Request):
+    return templates.TemplateResponse(request, "index.html")
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -112,21 +113,35 @@ app.include_router(proxy.router ,dependencies=[Depends(get_current_user)])
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    body = await request.body()
+    async def receive():
+        return {"type": "http.request", "body": body}
+    request._receive = receive
     start_time = time.perf_counter()
-    db = sessionLocal()
     response = await call_next(request)
     process_time = time.perf_counter() - start_time
-    user = getattr(request.state,"user",None)
+    response_body = [section async for section in response.body_iterator]
+    response.body_iterator = iterate_in_threadpool(iter(response_body))
+    resp_body_bytes = b"".join(response_body)
+    db = sessionLocal()
+    
     try:
-        new_log = RequestLog(
-            method=request.method,
-            path=request.url.path,
-            status_code=response.status_code,
-            latency=process_time,
-            user_id=user.id if user else None
-        )
-        db.add(new_log)
-        db.commit()
+        user = getattr(request.state,"user",None)
+        req_text = body.decode('utf-8', errors='ignore')[:2000]
+        res_text = resp_body_bytes.decode('utf-8', errors='ignore')[:2000]
+        excluded_paths = ["/admin", "/auth", "/dashboard", "/static", "/docs", "/openapi.json"]
+        if not any(request.url.path.startswith(p) for p in excluded_paths):
+            new_log = RequestLog(
+                method=request.method,
+                path=request.url.path,
+                status_code=response.status_code,
+                latency=process_time,
+                user_id=user.id if user else None,
+                request_body=req_text,
+                response_body=res_text
+            )
+            db.add(new_log)
+            db.commit()
     except Exception as e:
         db.rollback()
         print(f"Error logging request: {e}")
@@ -134,7 +149,12 @@ async def log_requests(request: Request, call_next):
         db.close()
     
     print(f"Method: {request.method} | Status: {response.status_code} | Latency: {process_time:.4f} seconds")
-    return response
+    return Response(
+        content=resp_body_bytes,
+        status_code=response.status_code,
+        headers=dict(response.headers),
+        media_type=response.media_type
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

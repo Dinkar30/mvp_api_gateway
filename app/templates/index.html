@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gateway Console</title>
+<meta name="description" content="Gateway Console for managing microservices with analytics, health checks, and rate limiting." />
+
+<!-- Set theme before paint to avoid a flash of the wrong theme -->
+<script>
+(function () {
+    var saved = localStorage.getItem('gateway-theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    :root,
+    :root[data-theme="light"] {
+        --bg: #F1F2EE;
+        --paper: #FFFFFF;
+        --ink: #14171B;
+        --line: #E1E2DC;
+        --muted: #767B72;
+        --teal: #0E6B57;
+        --teal-rgb: 14,107,87;
+        --teal-soft: #E6F1EC;
+        --amber: #A9711C;
+        --amber-rgb: 169,113,28;
+        --amber-soft: #F7EEDD;
+        --red: #AE3F26;
+        --red-soft: #F8E9E3;
+        --panel-dark: #0C1013;
+        --panel-dark-ink: #E9EBE6;
+        --panel-dark-muted: #8B928C;
+        --panel-dark-line: rgba(255,255,255,0.09);
+    }
+
+    :root[data-theme="dark"] {
+        --bg: #0A0D10;
+        --paper: #12171B;
+        --ink: #E9EBE6;
+        --line: #232A2F;
+        --muted: #8B928C;
+        --teal: #37D0A6;
+        --teal-rgb: 55,208,166;
+        --teal-soft: rgba(55,208,166,0.12);
+        --amber: #E7B24E;
+        --amber-rgb: 231,178,78;
+        --amber-soft: rgba(231,178,78,0.12);
+        --red: #EB7457;
+        --red-soft: rgba(235,116,87,0.14);
+        --panel-dark: #05070A;
+        --panel-dark-ink: #E9EBE6;
+        --panel-dark-muted: #8B928C;
+        --panel-dark-line: rgba(255,255,255,0.07);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: 'IBM Plex Sans', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    h1, h2, h3 { font-family: 'Space Grotesk', 'IBM Plex Sans', sans-serif; margin: 0; }
+    code, .mono { font-family: 'IBM Plex Mono', monospace; }
+    a { text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+    .shell { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+
+    /* ---------------- Header ---------------- */
+    header {
+        position: sticky; top: 0; z-index: 20;
+        background: color-mix(in srgb, var(--bg) 88%, transparent);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--line);
+    }
+    header .shell { display: flex; align-items: center; justify-content: space-between; padding-top: 18px; padding-bottom: 18px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+        width: 38px; height: 38px; border-radius: 8px;
+        background: var(--ink); color: var(--bg);
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600;
+    }
+    .brand-text p:first-child { font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal); margin: 0; }
+    .brand-text p:last-child { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .theme-toggle {
+        position: relative; width: 46px; height: 25px; border-radius: 999px; border: 1px solid var(--line);
+        background: var(--paper); cursor: pointer; padding: 0; flex-shrink: 0;
+    }
+    .theme-toggle .icon { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; line-height: 1; pointer-events: none; }
+    .theme-toggle .icon.sun { left: 5px; color: var(--amber); }
+    .theme-toggle .icon.moon { right: 5px; color: #6FADE8; }
+    .theme-toggle .knob {
+        position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%;
+        background: var(--bg); box-shadow: 0 1px 3px rgba(0,0,0,0.25); transition: transform 0.25s ease;
+    }
+    [data-theme="dark"] .theme-toggle .knob { transform: translateX(21px); }
+
+    .btn { font-size: 13.5px; font-weight: 600; border-radius: 999px; padding: 9px 18px; transition: all 0.15s ease; cursor: pointer; }
+    .btn-outline { border: 1px solid var(--line); color: var(--ink); }
+    .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+    .btn-solid { background: var(--teal); color: #06231B; border: none; }
+    .btn-solid:hover { filter: brightness(1.08); }
+
+    /* ---------------- Hero ---------------- */
+    .hero-wrap { position: relative; overflow: hidden; }
+    .hero-wrap::before {
+        content: ""; position: absolute; top: -220px; left: -160px;
+        width: 560px; height: 560px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(var(--teal-rgb),0.16), transparent 70%);
+        pointer-events: none;
+    }
+    main .shell { padding-top: 64px; padding-bottom: 30px; }
+    .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center; position: relative; }
+
+    .eyebrow-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 12.5px; font-weight: 600; color: var(--teal);
+        background: var(--teal-soft); border: 1px solid rgba(var(--teal-rgb),0.25);
+        border-radius: 999px; padding: 6px 14px;
+    }
+    .hero h1 { margin-top: 22px; font-size: 46px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; }
+    .hero h1 .accent { color: var(--teal); }
+    .hero p.lead { margin-top: 20px; font-size: 17px; line-height: 1.65; color: var(--muted); max-width: 46ch; }
+
+    .hero-ctas { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
+    .hero-ctas .btn { padding: 12px 24px; }
+
+    .checklist { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 34px; font-size: 13.5px; color: var(--muted); }
+    .checklist span { display: flex; align-items: center; gap: 7px; }
+    .checklist .tick { color: var(--teal); font-weight: 700; }
+
+    /* ---------------- Hero visual: traffic overview card ---------------- */
+    .traffic-card {
+        border-radius: 22px; border: 1px solid var(--panel-dark-line);
+        background: var(--panel-dark); padding: 22px;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.35);
+    }
+    .traffic-inner { border-radius: 16px; border: 1px solid var(--panel-dark-line); padding: 20px; }
+    .traffic-head { display: flex; align-items: center; justify-content: space-between; }
+    .traffic-head p:first-child { font-size: 14px; font-weight: 600; color: var(--panel-dark-ink); margin: 0; }
+    .traffic-head p:last-child { font-size: 12.5px; color: var(--panel-dark-muted); margin: 3px 0 0; }
+    .status-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; font-weight: 600; color: #37D0A6;
+        background: rgba(55,208,166,0.14); border-radius: 999px; padding: 5px 12px;
+    }
+    .status-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: #37D0A6; }
+
+    .stat-row { margin-top: 20px; border-radius: 14px; border: 1px solid var(--panel-dark-line); background: rgba(255,255,255,0.02); padding: 14px 16px; }
+    .stat-row .top { display: flex; justify-content: space-between; font-size: 13px; color: var(--panel-dark-muted); }
+    .stat-row .top strong { color: var(--panel-dark-ink); font-family: 'IBM Plex Mono', monospace; font-size: 13.5px; font-weight: 500; }
+    .bar-track { margin-top: 10px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+    .bar-fill { height: 100%; width: 82%; border-radius: 999px; background: linear-gradient(90deg, #37D0A6, #6FADE8); animation: bar-breathe 3.5s ease-in-out infinite; }
+    @keyframes bar-breathe { 0%, 100% { width: 78%; } 50% { width: 86%; } }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .stat-tile { border-radius: 14px; border: 1px solid var(--panel-dark-line); background: rgba(255,255,255,0.02); padding: 14px 16px; }
+    .stat-tile p:first-child { font-size: 12px; color: var(--panel-dark-muted); margin: 0; }
+    .stat-tile p:last-child { font-size: 22px; font-weight: 600; color: var(--panel-dark-ink); margin: 6px 0 0; font-family: 'IBM Plex Mono', monospace; }
+
+    /* mini gateway-flow visual — same signature motif used across the console */
+    .flow-demo { margin-top: 16px; border-radius: 14px; border: 1px solid var(--panel-dark-line); background: rgba(255,255,255,0.02); padding: 14px 16px; }
+    .flow-demo .caption { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--panel-dark-muted); margin: 0 0 10px; }
+    .flow-demo .row { display: grid; grid-template-columns: 46px 1fr auto; align-items: center; padding: 7px 0; }
+    .flow-demo .row + .row { border-top: 1px dashed var(--panel-dark-line); }
+    .flow-demo .client { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--panel-dark-muted); }
+    .flow-demo .track { position: relative; height: 2px; background: var(--panel-dark-line); margin: 0 12px; border-radius: 2px; }
+    .flow-demo .track .fdot {
+        position: absolute; top: 50%; left: 0; width: 5px; height: 5px; border-radius: 50%;
+        background: #37D0A6; transform: translate(-50%, -50%);
+        box-shadow: 0 0 8px rgba(55,208,166,0.8);
+        animation: demo-flow 2.4s linear infinite;
+    }
+    @keyframes demo-flow { 0% { left: 0%; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+    .flow-demo .svc { display: flex; align-items: center; gap: 6px; justify-self: end; font-size: 11.5px; color: #C7CAC3; white-space: nowrap; }
+    .flow-demo .svc .sdot { width: 5px; height: 5px; border-radius: 50%; background: #37D0A6; }
+
+    /* ---------------- Features ---------------- */
+    .features { margin-top: 84px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feature-card { border: 1px solid var(--line); background: var(--paper); border-radius: 18px; padding: 26px; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .feature-card:hover { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(20,23,27,0.08); }
+    .feature-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--teal-soft); color: var(--teal); display: flex; align-items: center; justify-content: center; }
+    .feature-card h2 { margin-top: 18px; font-size: 18px; font-weight: 600; }
+    .feature-card p { margin-top: 10px; font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+
+    footer { border-top: 1px solid var(--line); padding: 26px 0; text-align: center; font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+        .hero { grid-template-columns: 1fr; }
+        .features { grid-template-columns: 1fr; }
+        .hero h1 { font-size: 36px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="hero-wrap">
+
+    <header>
+        <div class="shell">
+            <a href="/" class="brand">
+                <div class="brand-mark">GC</div>
+                <div class="brand-text">
+                    <p>Gateway Console</p>
+                    <p>Microservice control plane</p>
+                </div>
+            </a>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                    <span class="icon sun">&#9728;</span>
+                    <span class="icon moon">&#9789;</span>
+                    <span class="knob"></span>
+                </button>
+                <a href="/auth/login" class="btn btn-outline">Login</a>
+                <a href="/auth/signup" class="btn btn-solid">Sign up</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="shell">
+
+            <section class="hero">
+                <div>
+                    <span class="eyebrow-badge">Secure routing &middot; observability &middot; control</span>
+                    <h1>Gateway Console:<br><span class="accent">the gateway for your microservices.</span></h1>
+                    <p class="lead">Unify traffic, accelerate delivery, and inspect every request from a polished control center built for modern teams.</p>
+
+                    <div class="hero-ctas">
+                        <a href="/auth/signup" class="btn btn-solid">Sign up</a>
+                        <a href="/auth/login" class="btn btn-outline">Login</a>
+                    </div>
+
+                    <div class="checklist">
+                        <span><span class="tick">&#10003;</span>Zero-friction onboarding</span>
+                        <span><span class="tick">&#10003;</span>Full traffic visibility</span>
+                        <span><span class="tick">&#10003;</span>Built-in resilience</span>
+                    </div>
+                </div>
+
+                <div class="traffic-card">
+                    <div class="traffic-inner">
+                        <div class="traffic-head">
+                            <div>
+                                <p>Traffic overview</p>
+                                <p>Live request insights</p>
+                            </div>
+                            <span class="status-chip"><span class="dot"></span>Healthy</span>
+                        </div>
+
+                        <div class="stat-row">
+                            <div class="top"><span>Requests / minute</span><strong>1,248</strong></div>
+                            <div class="bar-track"><div class="bar-fill"></div></div>
+                        </div>
+
+                        <div class="stat-grid">
+                            <div class="stat-tile"><p>Rate limiting</p><p>99.8%</p></div>
+                            <div class="stat-tile"><p>Healthy services</p><p>12/12</p></div>
+                        </div>
+
+                        <div class="flow-demo">
+                            <p class="caption">Live routing</p>
+                            <div class="row">
+                                <div class="client">Client</div>
+                                <div class="track"><div class="fdot" style="animation-delay:0s;"></div></div>
+                                <div class="svc"><span class="sdot"></span>Users</div>
+                            </div>
+                            <div class="row">
+                                <div class="client">Client</div>
+                                <div class="track"><div class="fdot" style="animation-delay:-0.8s;"></div></div>
+                                <div class="svc"><span class="sdot"></span>Billing</div>
+                            </div>
+                            <div class="row">
+                                <div class="client">Client</div>
+                                <div class="track"><div class="fdot" style="animation-delay:-1.6s;"></div></div>
+                                <div class="svc"><span class="sdot"></span>Notifications</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features">
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2>Rate limiting</h2>
+                    <p>Protect upstream services with policy-driven throttling and smart traffic shaping.</p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M3 13l2-2m0 0l7-7 7 7M5 11v10h14V11" />
+                        </svg>
+                    </div>
+                    <h2>Analytics</h2>
+                    <p>Measure request volume, latency, and failures with a clear operational view.</p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2>Health</h2>
+                    <p>Maintain confidence with health checks and instant visibility into service availability.</p>
+                </article>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>Built for teams building fast, reliable, and observable APIs.</footer>
+
+</div>
+
+<script>
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('gateway-theme', next);
+}
+</script>
+
+</body>
+</html>
