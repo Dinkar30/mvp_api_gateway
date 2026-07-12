@@ -49,10 +49,14 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
             
             if not service.is_healthy:
                 raise HTTPException(status_code=503,detail="service is currently unavailable")
+            client_headers = dict(response.headers)
+            client_headers.pop("Transfer-Encoding", None)
+            client_headers.pop("Content-Length", None)
+            client_headers.pop("content-length", None)
             return Response(
                 content = response.content,
                 status_code=response.status_code,
-                headers=dict(response.headers)
+                headers=client_headers
             )
     except ConnectError:
         raise HTTPException(status_code=502,detail=f"could not connect to backend service at {service.target_url}")
