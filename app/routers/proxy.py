@@ -50,9 +50,17 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
             if not service.is_healthy:
                 raise HTTPException(status_code=503,detail="service is currently unavailable")
             client_headers = dict(response.headers)
-            client_headers.pop("Transfer-Encoding", None)
-            client_headers.pop("Content-Length", None)
-            client_headers.pop("content-length", None)
+
+            for h in (
+                "content-length",
+                "transfer-encoding",
+                "connection",
+                "keep-alive",
+                "upgrade",
+                "proxy-connection",
+            ):
+                client_headers.pop(h, None)
+            print(dict(response.headers))
             return Response(
                 content = response.content,
                 status_code=response.status_code,
