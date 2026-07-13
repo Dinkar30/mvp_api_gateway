@@ -93,9 +93,13 @@ function toggleTheme() {
 }
 
 function showDetails(req, res) {
-    document.getElementById('reqBody').innerText = req || 'No body captured';
-    document.getElementById('resBody').innerText = res || 'No body captured';
-    document.getElementById('detailsModal').classList.remove('hidden');
+document.querySelectorAll('.view-log-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('reqBody').innerText = btn.getAttribute('data-req') || "No body";
+        document.getElementById('resBody').innerText = btn.getAttribute('data-res') || "No body";
+        document.getElementById('detailsModal').classList.remove('hidden');
+    });
+});
 }
 
 function closeDetails() {
@@ -651,7 +655,12 @@ checkAuth();
                                 <td class="latency">{{ log.latency | round(4) }}s</td>
                                 <td class="timestamp">{{ log.timestamp | to_ist_time }}</td>
                                 <td>
-                                    <button onclick="showDetails({{ log.request_body | default('') | tojson }}, {{ log.response_body | default('') | tojson }})" class="text-indigo-600 hover:underline">View</button>
+                         <button 
+                            class="text-indigo-600 hover:underline view-log-btn" 
+                            data-req="{{ log.request_body | escape }}" 
+                            data-res="{{ log.response_body | escape }}">
+                            View
+                        </button>
                                 </td>
                             </tr>
                             {% else %}
