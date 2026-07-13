@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 app = FastAPI()
 
 @app.get("/")
@@ -15,5 +15,6 @@ async def get_data():
     return {"id": "1", "service": "Backend "}
 
 @app.post("/test-post")
-async def test_post(data: dict):
-    return {"received":data}
+async def mirror(request: Request):
+    data = await request.json()
+    return {"status": "received", "your_data": data}
