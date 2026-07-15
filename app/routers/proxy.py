@@ -6,6 +6,9 @@ from ..dependencies import get_current_user
 from ..database import get_db
 from sqlalchemy.orm import Session
 import asyncio
+import os 
+from dotenv import load_dotenv
+load_dotenv()
 
 MAX_RETRIES = 3
 RETRY_BACKOFF_FACTOR = 0.5  
@@ -24,6 +27,7 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
         async with AsyncClient() as client:
             url = f"{service.target_url}/{path}"
             headers = dict(request.headers)
+            headers["X-Shield"] = os.getenv("SECRET_PHRASE")
             headers.pop("x-api-key", None)
             headers.pop("host", None)
 
@@ -50,6 +54,7 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
             if not service.is_healthy:
                 raise HTTPException(status_code=503,detail="service is currently unavailable")
             client_headers = dict(response.headers)
+
 
             for h in (
                 "content-length",
