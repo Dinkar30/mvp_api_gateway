@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(repeat_health_check())
     yield
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["Content-Type", "X-API-KEY", "Authorization"],expose_headers=["*"])
 async def repeat_health_check():
     while True:
         db = sessionLocal()
