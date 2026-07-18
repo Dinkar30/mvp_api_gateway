@@ -3,6 +3,7 @@ services:
     build: .
     restart: always
     environment:
+      - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://gateway_user:${DB_PASSWORD}@db:5432/gateway_db
       - REDIS_HOST=redis
     depends_on:

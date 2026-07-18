@@ -118,11 +118,26 @@ async def log_requests(request: Request, call_next):
         return {"type": "http.request", "body": body}
     request._receive = receive
     start_time = time.perf_counter()
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception as e:
+        import traceback
+        print("App Crashed")
+        traceback.print_exc()
+        return JSONResponse(status_code=500,content={"detail":str(e)})
     process_time = time.perf_counter() - start_time
-    response_body = [section async for section in response.body_iterator]
-    response.body_iterator = iterate_in_threadpool(iter(response_body))
-    resp_body_bytes = b"".join(response_body)
+    resp_body_bytes = b""
+    if hasattr(response,"body_iterator"):
+        try:
+            response_body = [section async for section in response.body_iterator]
+            response.body_iterator = iterate_in_threadpool(iter(response_body))
+            resp_body_bytes = b"".join(response_body)
+        except Exception as e:
+            print(f"Iterator error:{e}")
+            resp_body_bytes = b"Could not capture the streaming body"
+    else :
+        resp_body_bytes = getattr(response,"body",b"")
+
     db = sessionLocal()
     
     try:
