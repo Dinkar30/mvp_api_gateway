@@ -26,6 +26,7 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
     try:
         async with AsyncClient() as client:
             url = f"{service.target_url}/{path}"
+            print(f"DEBUG: Proxying to {target}")
             headers = dict(request.headers)
             headers["X-Shield"] = os.getenv("SECRET_PHRASE")
             headers.pop("x-api-key", None)
@@ -40,7 +41,7 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
                         content=await request.body(),
                         headers=headers,
                         params=request.query_params,
-                        timeout=10.0
+                        timeout=15.0
                     )
                     break
                 except RETRYABLE_ERRORS as e:
@@ -49,7 +50,11 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
                         await asyncio.sleep(backoff_time)
                         continue
                     else:
-                        raise
+                        import traceback
+                        print("PROXY CRASH START")
+                        traceback.print_exc()
+                        print("PROXY CRASH END")
+                        raise HTTPException(status_code=500,detail=str(e))
             
             if not service.is_healthy:
                 raise HTTPException(status_code=503,detail="service is currently unavailable")
