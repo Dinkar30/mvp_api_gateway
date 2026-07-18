@@ -8,6 +8,7 @@ import hashlib
 from .security import ALGORITHM, SECRET_KEY 
 import jwt
 async def get_current_user( request: Request, db: Session = Depends(get_db) , x_api_key:str = Header(None)):
+    print(f"DEBUG: Incoming Header X-API-KEY: {x_api_key}")
     if not x_api_key:
         raise HTTPException(
             status_code=401,
