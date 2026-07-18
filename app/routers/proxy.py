@@ -26,7 +26,7 @@ async def proxy( request: Request, service_prefix: str , path: str , db: Session
     try:
         async with AsyncClient() as client:
             url = f"{service.target_url}/{path}"
-            print(f"DEBUG: Proxying to {target}")
+            print(f"DEBUG: Proxying to {url}")
             headers = dict(request.headers)
             headers["X-Shield"] = os.getenv("SECRET_PHRASE")
             headers.pop("x-api-key", None)
