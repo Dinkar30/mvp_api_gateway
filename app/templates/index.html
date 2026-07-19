@@ -115,6 +115,11 @@
     .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
     .btn-solid { background: var(--teal); color: #06231B; border: none; }
     .btn-solid:hover { filter: brightness(1.08); }
+    .guide-link {
+        font-size: 13.5px; font-weight: 600; color: var(--teal); text-decoration: none;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .guide-link:hover { text-decoration: underline; }
 
     /* ---------------- Hero ---------------- */
     .hero-wrap { position: relative; overflow: hidden; }
@@ -222,6 +227,7 @@
             </a>
 
             <div class="nav-actions">
+                <a href="https://github.com/Dinkar30/mvp_api_gateway#developer-integration-guide" class="guide-link" target="_blank" rel="noopener noreferrer">Documentation</a>
                 <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
                     <span class="icon sun">&#9728;</span>
                     <span class="icon moon">&#9789;</span>

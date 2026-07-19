@@ -1,9 +1,9 @@
 
-# API Gateway Management Suite (Functional Prototype)
+# API Gateway Management Suite
 
 A high-performance security and observability layer designed to sit in front of distributed microservices. This suite provides a unified entry point for authentication, rate limiting, and health monitoring, allowing developers to secure their backends with zero code changes to their core logic.
 
-## The Core Engineering
+## The Core Work
 The primary goal of this project was to solve the "Gateway Bottleneck" where security checks slow down traffic. 
 Key implementations include:
 - Implemented a SHA-256 pre-hashing layer to bypass Bcrypt’s native character limits for high-entropy API tokens.
