@@ -6,6 +6,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://gateway_user:${DB_PASSWORD}@db:5432/gateway_db
       - REDIS_HOST=redis
+      - SECRET_PHRASE=${SECRET_PHRASE}
     depends_on:
       - db
       - redis
