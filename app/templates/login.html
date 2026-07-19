@@ -147,6 +147,12 @@
     }
     [data-theme="dark"] .theme-toggle .knob { transform: translateX(23px); }
 
+    .guide-link {
+        position: absolute; top: 28px; right: 94px; z-index: 2;
+        font-size: 12.5px; font-weight: 600; color: var(--teal); text-decoration: none;
+    }
+    .guide-link:hover { text-decoration: underline; }
+
     .card { width: 100%; max-width: 380px; }
     .card-head { margin-bottom: 30px; }
     .card-head .eyebrow {
@@ -252,6 +258,7 @@
 
     <!-- ================= Form panel ================= -->
     <main class="form-panel">
+        <a href="https://github.com/Dinkar30/mvp_api_gateway#developer-integration-guide" class="guide-link" target="_blank" rel="noopener noreferrer">Documentation</a>
         <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
             <span class="icon sun">&#9728;</span>
             <span class="icon moon">&#9789;</span>

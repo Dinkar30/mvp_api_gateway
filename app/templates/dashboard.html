@@ -209,6 +209,12 @@ checkAuth();
     }
     .role-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
 
+    .guide-link {
+        font-size: 13px; font-weight: 600; color: var(--teal); text-decoration: none;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .guide-link:hover { text-decoration: underline; }
+
     .theme-toggle {
         position: relative; width: 50px; height: 27px;
         border-radius: 999px; border: 1px solid var(--line);
@@ -473,6 +479,8 @@ checkAuth();
                 </div>
 
                 <span class="role-tag"><span class="dot"></span>{{ user.role }}</span>
+
+                <a href="https://github.com/Dinkar30/mvp_api_gateway#developer-integration-guide" class="guide-link" target="_blank" rel="noopener noreferrer">Documentation</a>
 
                 <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
                     <span class="icon sun">&#9728;</span>
